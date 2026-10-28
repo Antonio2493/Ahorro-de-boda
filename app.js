@@ -68,8 +68,8 @@ window.addEventListener('DOMContentLoaded', () => {
         btnNextVerse.addEventListener('click', () => {
             currentVerseIndex = (currentVerseIndex + 1) % BIBLE_VERSES.length;
             const v = BIBLE_VERSES[currentVerseIndex];
-            verseText.innerText = `"${v.text}"`;
-            verseRef.innerText = v.ref;
+            if (verseText) verseText.innerText = `"${v.text}"`;
+            if (verseRef) verseRef.innerText = v.ref;
         });
     }
 
@@ -102,7 +102,6 @@ function sincronizarBodaConNube() {
         snapshot.forEach((docSnap) => {
             appState.savings.push({ idDoc: docSnap.id, ...docSnap.data() });
         });
-        // Ordenar por fecha de creación si existe
         appState.savings.sort((a, b) => (b.fecha || 0) - (a.fecha || 0));
         renderApp();
     });
@@ -249,6 +248,7 @@ window.eliminarGastoNube = async function(idDoc) {
         }
     }
 };
+
 // ==========================================
 // RULETA DE PREMIOS PARA DORITA
 // ==========================================
@@ -281,7 +281,6 @@ function dibujarRuletaEstetica(anguloRotacion) {
     const centro = canvas.width / 2;
     const radio = centro - 5;
 
-    // Colores vibrantes de alta visibilidad para que resalten
     const coloresSectores = ['#e11d48', '#9333ea', '#2563eb', '#0d9488', '#d97706', '#db2777'];
 
     premiosRuleta.forEach((premio, i) => {
@@ -293,21 +292,18 @@ function dibujarRuletaEstetica(anguloRotacion) {
         ctx.arc(centro, centro, radio, anguloInicio, anguloFin);
         ctx.closePath();
 
-        // Rellenar con colores alegres
         ctx.fillStyle = coloresSectores[i % coloresSectores.length];
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 3;
         ctx.stroke();
 
-        // Dibujar el texto dentro de cada porción
         ctx.save();
         ctx.translate(centro, centro);
         ctx.rotate(anguloInicio + arco / 2);
         ctx.textAlign = "right";
         ctx.fillStyle = "#ffffff";
         ctx.font = "bold 12px Poppins, sans-serif";
-        // Añadir una ligera sombra al texto para que no se pierda
         ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
         ctx.shadowBlur = 4;
         ctx.fillText(premio.texto, radio - 20, 5);
@@ -323,10 +319,10 @@ function verificarBloqueoDiario() {
     if (ultimoGiro) {
         const ahora = Date.now();
         const tiempoTranscurrido = ahora - parseInt(ultimoGiro);
-        const ₡24Horas = 24 * 60 * 60 * 1000;
+        const unDiaMs = 24 * 60 * 60 * 1000;
 
-        if (tiempoTranscurrido < ₡24Horas) {
-            const horasRestantes = Math.ceil((₡24Horas - tiempoTranscurrido) / (1000 * 60 * 60));
+        if (tiempoTranscurrido < unDiaMs) {
+            const horasRestantes = Math.ceil((unDiaMs - tiempoTranscurrido) / (1000 * 60 * 60));
             if (btnGirar) btnGirar.disabled = true;
             if (msg) msg.innerText = `⏳ Ya giraste hoy. Vuelve en ${horasRestantes} horas para tu próximo intento.`;
         }
@@ -336,7 +332,6 @@ function verificarBloqueoDiario() {
 function girarRuleta() {
     if (girando) return;
     
-    // Verificación de seguridad de 24 horas
     const ultimoGiro = localStorage.getItem('boda_ultimo_giro');
     if (ultimoGiro) {
         const tiempoTranscurrido = Date.now() - parseInt(ultimoGiro);
@@ -350,26 +345,21 @@ function girarRuleta() {
     const btnGirar = document.getElementById('btn-girar');
     if (btnGirar) btnGirar.disabled = true;
 
-    // Guardar el tiempo actual del giro
     localStorage.setItem('boda_ultimo_giro', Date.now().toString());
 
     let numSectores = premiosRuleta.length;
     let sectorElegido = Math.floor(Math.random() * numSectores);
-    
-    // Calcular los grados de giro aleatorios (mínimo 5 vueltas completas + sector elegido)
     let gradosPorSector = 360 / numSectores;
     let gradosObjetivo = 360 * 5 + (numSectores - sectorElegido) * gradosPorSector - gradosPorSector / 2;
 
     let anguloInicioAnimacion = anguloActual;
-    let duracion = 3500; // 3.5 segundos de animación
+    let duracion = 3500;
     let tiempoInicio = null;
 
     function animar(tiempoActual) {
         if (!tiempoInicio) tiempoInicio = tiempoActual;
         let tiempoPasado = tiempoActual - tiempoInicio;
         let progreso = Math.min(tiempoPasado / duracion, 1);
-        
-        // Efecto de aceleración y desaceleración suave (easeOutCubic)
         let easeProgreso = 1 - Math.pow(1 - progreso, 3);
         
         let anguloActualAnim = anguloInicioAnimacion + (gradosObjetivo * (Math.PI / 180)) * easeProgreso;
@@ -394,6 +384,5 @@ function mostrarNotificacionPremio(premio) {
         msg.innerHTML = `🎉 ¡Felicidades! Te ha salido: <strong style="color: #e11d48; font-size: 1.1rem;">${premio.texto}</strong>`;
     }
     
-    // Alerta especial de confirmación para que quede constancia del premio real
     alert(`🎉 ¡Increíble! Dorita se ha ganado:\n\n✨ ${premio.texto} ✨\n\n(Este resultado ha quedado registrado para hacerlo efectivo ❤️).`);
-};
+}
