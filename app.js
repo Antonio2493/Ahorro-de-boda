@@ -3,7 +3,6 @@
 // Integración en Tiempo Real con Firebase Firestore
 // ==========================================
 
-// Colección de versículos bíblicos (Reina-Valera 1960)
 const BIBLE_VERSES = [
     { text: "Las muchas aguas no podrán apagar el amor, ni le ahogarán los ríos.", ref: "— Cantares 8:7 (RVR1960)" },
     { text: "El amor es sufrido, es benigno; el amor no tiene envidia, el amor no es jactancioso, no se envanece; no hace nada indebido, no busca lo suyo, no se irrita, no guarda rencor.", ref: "— 1 Corintios 13:4-5 (RVR1960)" },
@@ -21,19 +20,15 @@ let appState = {
     expenses: []
 };
 
-// Referencias del DOM
 let inputGoal, btnSaveGoal, progressBarFill, labelSaved, labelPercentage, labelGoal;
 let summarySavings, summaryExpenses, summaryBalance;
 let formSavings, savingPerson, savingConcept, savingAmount, savingsList;
 let formExpenses, expenseConcept, expenseAmount, expensesList;
 let verseText, verseRef, btnNextVerse;
 
-// Formateador de Colones Costarricenses (₡)
 const formatCRC = (amount) => '₡' + Math.round(amount).toLocaleString('es-CR');
 
-// Evento que se ejecuta al cargar la ventana
 window.addEventListener('DOMContentLoaded', () => {
-    // Inicializar elementos DOM
     inputGoal = document.getElementById('input-goal');
     btnSaveGoal = document.getElementById('btn-save-goal');
     progressBarFill = document.getElementById('progress-bar-fill');
@@ -60,7 +55,6 @@ window.addEventListener('DOMContentLoaded', () => {
     verseRef = document.getElementById('verse-ref');
     btnNextVerse = document.getElementById('btn-next-verse');
 
-    // Asignación de Eventos
     if (btnSaveGoal) btnSaveGoal.addEventListener('click', guardarMetaNube);
     if (formSavings) formSavings.addEventListener('submit', guardarAhorroNube);
     if (formExpenses) formExpenses.addEventListener('submit', guardarGastoNube);
@@ -73,7 +67,6 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Iniciar Sincronización en Tiempo Real con Firebase si está listo
     if (window.db) {
         sincronizarBodaConNube();
     } else {
@@ -81,12 +74,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// ==========================================
-// SINCRONIZACIÓN EN TIEMPO REAL CON FIRESTORE
-// ==========================================
-
 function sincronizarBodaConNube() {
-    // 1. Escuchar Meta de la Boda
     const docMetaRef = window.doc(window.db, "boda_finanzas", "meta_general");
     window.onSnapshot(docMetaRef, (docSnap) => {
         if (docSnap.exists()) {
@@ -95,7 +83,6 @@ function sincronizarBodaConNube() {
         renderApp();
     });
 
-    // 2. Escuchar Lista de Ahorros
     const qSavings = window.collection(window.db, "boda_ahorros");
     window.onSnapshot(qSavings, (snapshot) => {
         appState.savings = [];
@@ -106,7 +93,6 @@ function sincronizarBodaConNube() {
         renderApp();
     });
 
-    // 3. Escuchar Lista de Gastos
     const qExpenses = window.collection(window.db, "boda_gastos");
     window.onSnapshot(qExpenses, (snapshot) => {
         appState.expenses = [];
@@ -118,7 +104,6 @@ function sincronizarBodaConNube() {
     });
 }
 
-// Renderizar Interfaz
 function renderApp() {
     if (inputGoal) inputGoal.value = appState.goal;
 
@@ -136,7 +121,6 @@ function renderApp() {
     if (summaryExpenses) summaryExpenses.innerText = formatCRC(totalExpenses);
     if (summaryBalance) summaryBalance.innerText = formatCRC(currentBalance);
 
-    // Tabla de Ahorros
     if (savingsList) {
         savingsList.innerHTML = '';
         if (appState.savings.length === 0) {
@@ -155,7 +139,6 @@ function renderApp() {
         }
     }
 
-    // Tabla de Gastos
     if (expensesList) {
         expensesList.innerHTML = '';
         if (appState.expenses.length === 0) {
@@ -174,7 +157,6 @@ function renderApp() {
     }
 }
 
-// Acciones con Firestore
 async function guardarMetaNube() {
     const newGoal = parseFloat(inputGoal.value);
     if (newGoal && newGoal > 0) {
@@ -248,10 +230,6 @@ window.eliminarGastoNube = async function(idDoc) {
         }
     }
 };
-
-// ==========================================
-// RULETA DE PREMIOS PARA DORITA
-// ==========================================
 
 const premiosRuleta = [
     { texto: "¡Un Chocolate! 🍫", tipo: "premio" },
