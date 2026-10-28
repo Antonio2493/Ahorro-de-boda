@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan de Ahorro Boda - Antonio & Dorita 💍</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Playfair Display & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        wedding: {
+                            gold: '#D4AF37',
+                            lightgold: '#F9F5E8',
+                            darkgold: '#AA820A',
+                            sage: '#708238',
+                            lightsage: '#EBF0E6',
+                            rose: '#E8C5C8',
+                            charcoal: '#2D3748',
+                            cream: '#FAFAFA'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F9FA;
+        }
+        .font-serif-title {
+            font-family: 'Playfair Display', serif;
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(212, 175, 55, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #F1F1F1;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+    </style>
+</head>
+<body class="text-wedding-charcoal bg-slate-50 min-h-screen flex flex-col justify-between">
+
+    <!-- Header / Navbar Principal -->
+    <header class="bg-white border-b border-wedding-gold/20 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 rounded-full bg-wedding-lightgold border border-wedding-gold/30 flex items-center justify-center text-wedding-gold text-2xl shadow-inner">
+                    💍
+                </div>
+                <div>
+                    <h1 class="font-serif-title text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">Antonio & Dorita</h1>
+                    <p class="text-xs text-emerald-700 font-medium tracking-wide uppercase flex items-center gap-1">
+                        <i class="fa-solid fa-heart text-rose-400"></i> Plan Financiero de Nuestra Boda
+                    </p>
+                </div>
+            </div>
+
+            <!-- Botones de Acción Rápidos -->
+            <div class="flex items-center gap-2">
+                <button onclick="openModal('modal-item')" class="bg-wedding-sage hover:bg-emerald-800 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-md flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Agregar Movimiento
+                </button>
+                <button onclick="resetToDefaultData()" class="bg-white hover:bg-gray-100 text-gray-600 border border-gray-200 p-2 rounded-xl text-sm transition-all" title="Restablecer datos iniciales">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="max-w-6xl mx-auto px-4 py-6 w-full space-y-6 flex-grow">
+
+        <!-- Banner de Meta de Ahorro y Progreso -->
+        <section class="bg-gradient-to-r from-wedding-lightgold via-white to-wedding-lightsage p-6 md:p-8 rounded-3xl border border-wedding-gold/30 card-shadow relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 opacity-10 text-wedding-gold pointer-events-none">
+                <i class="fa-solid fa-rings-wedding text-9xl"></i>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center relative z-10">
+                <div class="lg:col-span-2 space-y-3">
+                    <div class="inline-block px-3 py-1 bg-amber-100/80 text-amber-900 rounded-full text-xs font-semibold uppercase tracking-wider">
+                        ✨ Meta Total Estimada del Mes
+                    </div>
+                    <h2 class="text-3xl md:text-4xl font-bold font-serif-title text-gray-800">
+                        Fondo de Ahorro: <span id="val-fondo-boda" class="text-emerald-700">₡0</span>
+                    </h2>
+                    <p class="text-sm text-gray-600 max-w-xl">
+                        Este es el dinero neto libre estimado que destinarán al sueño de su boda después de cubrir todos los gastos, deudas y salidas del periodo.
+                    </p>
+
+                    <!-- Barra de Progreso -->
+                    <div class="pt-2">
+                        <div class="flex justify-between text-xs font-semibold text-gray-600 mb-1">
+                            <span>Ingresos Recibidos Efectivos: <strong id="progreso-texto-monto">₡0</strong></span>
+                            <span id="progreso-porcentaje">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden p-0.5 border border-gray-300">
+                            <div id="barra-progreso" class="bg-gradient-to-r from-emerald-500 to-teal-600 h-full rounded-full transition-all duration-700 w-0"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tarjeta Resumen Rápido -->
+                <div class="bg-white/80 backdrop-blur-sm p-4 rounded-2xl border border-wedding-gold/20 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center text-sm pb-2 border-b border-gray-100">
+                        <span class="text-gray-600 flex items-center gap-2">
+                            <i class="fa-solid fa-arrow-down text-emerald-500"></i> Total Ingresos:
+                        </span>
+                        <span id="val-total-ingresos" class="font-bold text-gray-800">₡0</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm pb-2 border-b border-gray-100">
+                        <span class="text-gray-600 flex items-center gap-2">
+                            <i class="fa-solid fa-arrow-up text-rose-500"></i> Total Gastos:
+                        </span>
+                        <span id="val-total-gastos" class="font-bold text-gray-800">₡0</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm pt-1">
+                        <span class="text-emerald-800 font-semibold flex items-center gap-2">
+                            <i class="fa-solid fa-vault text-wedding-gold"></i> Libre Ahorrado:
+                        </span>
+                        <span id="val-ahorro-real-actual" class="font-bold text-emerald-700 text-base">₡0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contenedor Principal en Dos Columnas (Ingresos y Gastos) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <!-- COLUMNA 1: INGRESOS -->
+            <section class="bg-white p-5 md:p-6 rounded-3xl border border-gray-200 card-shadow flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-wallet"></i>
+                            </div>
+                            <h3 class="font-serif-title font-bold text-xl text-gray-800">Ingresos & Entradas</h3>
+                        </div>
+                        <button onclick="openModal('modal-item', 'ingreso')" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium px-3 py-1.5 rounded-lg border border-emerald-200 transition-all flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> Ingreso
+                        </button>
+                    </div>
+
+                    <p class="text-xs text-gray-500 mb-3">Marca los ingresos conforme vayan depositándose en tu cuenta:</p>
+
+                    <!-- Lista de Ingresos -->
+                    <div id="lista-ingresos" class="space-y-2 max-h-[420px] overflow-y-auto custom-scrollbar pr-1">
+                        <!-- Renderizado Dinámico vía JavaScript -->
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center text-sm bg-emerald-50/50 p-3 rounded-xl">
+                    <span class="text-gray-600 font-medium">Subtotal Ingresos:</span>
+                    <span id="subtotal-ingresos" class="font-bold text-emerald-700 text-base">₡0</span>
+                </div>
+            </section>
+
+            <!-- COLUMNA 2: GASTOS Y DEUDAS -->
+            <section class="bg-white p-5 md:p-6 rounded-3xl border border-gray-200 card-shadow flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-receipt"></i>
+                            </div>
+                            <h3 class="font-serif-title font-bold text-xl text-gray-800">Gastos, Pagos & Citas</h3>
+                        </div>
+                        <button onclick="openModal('modal-item', 'gasto')" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium px-3 py-1.5 rounded-lg border border-rose-200 transition-all flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> Gasto
+                        </button>
+                    </div>
+
+                    <p class="text-xs text-gray-500 mb-3">Marca los gastos conforme se vayan cancelando:</p>
+
+                    <!-- Lista de Gastos -->
+                    <div id="lista-gastos" class="space-y-2 max-h-[420px] overflow-y-auto custom-scrollbar pr-1">
+                        <!-- Renderizado Dinámico vía JavaScript -->
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center text-sm bg-rose-50/50 p-3 rounded-xl">
+                    <span class="text-gray-600 font-medium">Subtotal Gastos:</span>
+                    <span id="subtotal-gastos" class="font-bold text-rose-700 text-base">₡0</span>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Gráfico y Análisis de Distribución de Dinero -->
+        <section class="bg-white p-6 rounded-3xl border border-gray-200 card-shadow">
+            <h3 class="font-serif-title font-bold text-xl text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie text-wedding-gold"></i> Distribución Financiera
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                <div class="h-64 flex justify-center items-center md:col-span-1">
+                    <canvas id="financialChart"></canvas>
+                </div>
+                
+                <div class="md:col-span-2 space-y-3 text-sm text-gray-600 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <h4 class="font-bold text-gray-800 text-base mb-1">Resumen del Plan para la Boda</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-emerald-500 mt-1"></i>
+                            <span><strong>Paz mental y cero deudas:</strong> Incluye el pago completo de los ₡33.000 a Dorita el 10 de Noviembre.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-emerald-500 mt-1"></i>
+                            <span><strong>Calidad de vida:</strong> Se mantienen presupuestadas las 4 citas de domingo con Dorita (₡12.000 c/u).</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-emerald-500 mt-1"></i>
+                            <span><strong>Servicios y casa al día:</strong> Cubre alimentación, luz, internet, iglesia y gastos del sábado.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-heart text-rose-400 mt-1"></i>
+                            <span><strong>Eficiencia de ahorro:</strong> El <strong id="porcentaje-eficiencia" class="text-emerald-700">0%</strong> de todo el dinero ingresado va directo a construir la boda de sus sueños.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-8 py-6 text-center text-xs text-gray-500">
+        <div class="max-w-6xl mx-auto px-4 space-y-2">
+            <p class="font-serif-title text-gray-700 text-sm">
+                "El amor es paciente y todo lo puede." — Antonio & Dorita 💍
+            </p>
+            <p>Diseñado especialmente para respaldar las metas y sueños de la boda.</p>
+        </div>
+    </footer>
+
+    <!-- MODAL PARA AGREGAR / EDITAR MOVIMIENTO -->
+    <div id="modal-item" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-100 relative animate-fade-in">
+            <button onclick="closeModal('modal-item')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 id="modal-title" class="font-serif-title font-bold text-xl text-gray-800 mb-4">Agregar Nuevo Movimiento</h3>
+
+            <form id="form-item" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                <input type="hidden" id="item-id">
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Tipo de Movimiento</label>
+                    <select id="item-tipo" class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-wedding-gold focus:outline-none text-sm">
+                        <option value="ingreso">🟢 Ingreso / Depósito</option>
+                        <option value="gasto">🔴 Gasto / Pago</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Descripción / Concepto</label>
+                    <input type="text" id="item-nombre" required placeholder="Ej. Pago de quincena, Luz, Cita..." class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-wedding-gold focus:outline-none text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Monto (₡ Colón costarricense)</label>
+                    <input type="number" id="item-monto" required min="1" step="1" placeholder="Ej. 25000" class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-wedding-gold focus:outline-none text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Categoría / Notas (Opcional)</label>
+                    <input type="text" id="item-categoria" placeholder="Ej. Trabajo, Servicios, Dorita..." class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-wedding-gold focus:outline-none text-sm">
+                </div>
+
+                <div class="flex items-center gap-2 pt-2">
+                    <input type="checkbox" id="item-completado" class="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500">
+                    <label for="item-completado" class="text-xs text-gray-700">Marcar como ya pagado/recibido</label>
+                </div>
+
+                <div class="pt-3 flex gap-3">
+                    <button type="button" onclick="closeModal('modal-item')" class="w-1/2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-all">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="w-1/2 bg-wedding-sage hover:bg-emerald-800 text-white font-medium py-2.5 rounded-xl text-sm transition-all shadow-md">
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- LOGICA EN JAVASCRIPT -->
+    <script>
+        // Datos Iniciales por defecto acordados en la consulta
+        const defaultData = [
+            // INGRESOS (Total: ₡599,000)
+            { id: '1', tipo: 'ingreso', nombre: 'Viernes (5 días iniciales)', monto: 62500, categoria: 'Trabajo', completado: false },
+            { id: '2', tipo: 'ingreso', nombre: 'Miércoles (Quincena + Día doble)', monto: 150000, categoria: 'Trabajo', completado: false },
+            { id: '3', tipo: 'ingreso', nombre: 'Dinero extra por fuera (10 Nov)', monto: 64000, categoria: 'Extra', completado: false },
+            { id: '4', tipo: 'ingreso', nombre: 'Aporte de Mamá (Luz/Internet)', monto: 10000, categoria: 'Familia', completado: false },
+            { id: '5', tipo: 'ingreso', nombre: 'Tercera Quincena (10 días)', monto: 125000, categoria: 'Trabajo', completado: false },
+            { id: '6', tipo: 'ingreso', nombre: 'Cuarta Quincena (10 días)', monto: 125000, categoria: 'Trabajo', completado: false },
+            { id: '7', tipo: 'ingreso', nombre: 'Semana Extra de Trabajo (5 días)', monto: 62500, categoria: 'Trabajo', completado: false },
+
+            // GASTOS (Total: ₡165,000)
+            { id: '8', tipo: 'gasto', nombre: 'Gastos del primer Sábado', monto: 25000, categoria: 'Pendientes', completado: false },
+            { id: '9', tipo: 'gasto', nombre: 'Comida (₡10,000 x 2 quincenas)', monto: 20000, categoria: 'Hogar', completado: false },
+            { id: '10', tipo: 'gasto', nombre: 'Recibo de Electricidad', monto: 13000, categoria: 'Servicios', completado: false },
+            { id: '11', tipo: 'gasto', nombre: 'Servicio de Internet', monto: 16000, categoria: 'Servicios', completado: false },
+            { id: '12', tipo: 'gasto', nombre: 'Aporte / Ofrenda Iglesia', monto: 10000, categoria: 'Iglesia', completado: false },
+            { id: '13', tipo: 'gasto', nombre: 'Pago de Deuda a Dorita (10 Nov)', monto: 33000, categoria: 'Dorita', completado: false },
+            { id: '14', tipo: 'gasto', nombre: 'Citas de Domingo con Dorita (4 x ₡12k)', monto: 48000, categoria: 'Dorita', completado: false }
+        ];
+
+        let state = [];
+        let chartInstance = null;
+
+        // Inicializar aplicación
+        document.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            renderUI();
+            initChart();
+        });
+
+        // Cargar estado desde localStorage o usar default
+        function loadState() {
+            const saved = localStorage.getItem('wedding_savings_antonio_dorita');
+            if (saved) {
+                try {
+                    state = JSON.parse(saved);
+                } catch (e) {
+                    state = [...defaultData];
+                }
+            } else {
+                state = [...defaultData];
+            }
+        }
+
+        // Guardar estado en localStorage
+        function saveState() {
+            localStorage.setItem('wedding_savings_antonio_dorita', JSON.stringify(state));
+            renderUI();
+            updateChart();
+        }
+
+        // Restablecer datos a los originales
+        function resetToDefaultData() {
+            if (confirm('¿Quieres restablecer la lista de ingresos y gastos a los datos originales?')) {
+                state = JSON.parse(JSON.stringify(defaultData));
+                saveState();
+            }
+        }
+
+        // Formateador de moneda en Colones costarricenses
+        function formatCRC(amount) {
+            return new Intl.NumberFormat('es-CR', {
+                style: 'currency',
+                currency: 'CRC',
+                maximumFractionDigits: 0
+            }).format(amount).replace('CRC', '₡').trim();
+        }
+
+        // Renderizar la Interfaz Completa
+        function renderUI() {
+            const listaIngresos = document.getElementById('lista-ingresos');
+            const listaGastos = document.getElementById('lista-gastos');
+
+            listaIngresos.innerHTML = '';
+            listaGastos.innerHTML = '';
+
+            let totalIngresos = 0;
+            let totalGastos = 0;
+            let ingresosCobrados = 0;
+            let gastosPagados = 0;
+
+            state.forEach(item => {
+                if (item.tipo === 'ingreso') {
+                    totalIngresos += item.monto;
+                    if (item.completado) ingresosCobrados += item.monto;
+                    listaIngresos.appendChild(createItemCard(item));
+                } else {
+                    totalGastos += item.monto;
+                    if (item.completado) gastosPagados += item.monto;
+                    listaGastos.appendChild(createItemCard(item));
+                }
+            });
+
+            const fondoBoda = totalIngresos - totalGastos;
+            const ahorroRealActual = ingresosCobrados - gastosPagados;
+
+            // Actualizar etiquetas numéricas
+            document.getElementById('val-total-ingresos').textContent = formatCRC(totalIngresos);
+            document.getElementById('val-total-gastos').textContent = formatCRC(totalGastos);
+            document.getElementById('val-fondo-boda').textContent = formatCRC(fondoBoda);
+            document.getElementById('val-ahorro-real-actual').textContent = formatCRC(ahorroRealActual < 0 ? 0 : ahorroRealActual);
+
+            document.getElementById('subtotal-ingresos').textContent = formatCRC(totalIngresos);
+            document.getElementById('subtotal-gastos').textContent = formatCRC(totalGastos);
+
+            // Actualizar Porcentaje de Eficiencia
+            const eficiencia = totalIngresos > 0 ? ((fondoBoda / totalIngresos) * 100).toFixed(1) : 0;
+            document.getElementById('porcentaje-eficiencia').textContent = `${eficiencia}%`;
+
+            // Actualizar Barra de Progreso
+            const porcentajeProgreso = totalIngresos > 0 ? Math.min(100, Math.round((ingresosCobrados / totalIngresos) * 100)) : 0;
+            document.getElementById('barra-progreso').style.width = `${porcentajeProgreso}%`;
+            document.getElementById('progreso-porcentaje').textContent = `${porcentajeProgreso}% Recibido`;
+            document.getElementById('progreso-texto-monto').textContent = formatCRC(ingresosCobrados);
+        }
+
+        // Crear elemento HTML para un ítem
+        function createItemCard(item) {
+            const div = document.createElement('div');
+            const isIngreso = item.tipo === 'ingreso';
+
+            div.className = `flex items-center justify-between p-3 rounded-2xl border transition-all ${
+                item.completado 
+                    ? 'bg-gray-50 border-gray-200 opacity-75' 
+                    : 'bg-white border-gray-100 hover:border-wedding-gold/40 shadow-sm'
+            }`;
+
+            div.innerHTML = `
+                <div class="flex items-center gap-3 pr-2">
+                    <input type="checkbox" ${item.completado ? 'checked' : ''} 
+                        onchange="toggleItem('${item.id}')"
+                        class="w-5 h-5 cursor-pointer rounded ${isIngreso ? 'text-emerald-600 focus:ring-emerald-500' : 'text-rose-600 focus:ring-rose-500'} border-gray-300">
+                    <div>
+                        <p class="text-sm font-semibold ${item.completado ? 'line-through text-gray-500' : 'text-gray-800'}">
+                            ${item.nombre}
+                        </p>
+                        ${item.categoria ? `<span class="text-[10px] px-2 py-0.5 rounded-full ${isIngreso ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'} font-medium">${item.categoria}</span>` : ''}
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-bold ${isIngreso ? 'text-emerald-700' : 'text-rose-700'}">
+                        ${isIngreso ? '+' : '-'}${formatCRC(item.monto)}
+                    </span>
+                    <button onclick="editItem('${item.id}')" class="text-gray-400 hover:text-wedding-gold p-1 text-xs" title="Editar">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button onclick="deleteItem('${item.id}')" class="text-gray-400 hover:text-rose-500 p-1 text-xs" title="Eliminar">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `;
+
+            return div;
+        }
+
+        // Alternar estado completado/pendiente
+        function toggleItem(id) {
+            const item = state.find(i => i.id === id);
+            if (item) {
+                item.completado = !item.completado;
+                saveState();
+            }
+        }
+
+        // Eliminar ítem
+        function deleteItem(id) {
+            if (confirm('¿Deseas eliminar este movimiento?')) {
+                state = state.filter(i => i.id !== id);
+                saveState();
+            }
+        }
+
+        // Abrir Modal
+        function openModal(modalId, defaultTipo = 'ingreso') {
+            document.getElementById('form-item').reset();
+            document.getElementById('item-id').value = '';
+            document.getElementById('item-tipo').value = defaultTipo;
+            document.getElementById('modal-title').textContent = 'Agregar Nuevo Movimiento';
+            document.getElementById(modalId).classList.remove('hidden');
+            document.getElementById(modalId).classList.add('flex');
+        }
+
+        // Cerrar Modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            document.getElementById(modalId).classList.remove('flex');
+        }
+
+        // Editar ítem
+        function editItem(id) {
+            const item = state.find(i => i.id === id);
+            if (!item) return;
+
+            document.getElementById('item-id').value = item.id;
+            document.getElementById('item-tipo').value = item.tipo;
+            document.getElementById('item-nombre').value = item.nombre;
+            document.getElementById('item-monto').value = item.monto;
+            document.getElementById('item-categoria').value = item.categoria || '';
+            document.getElementById('item-completado').checked = item.completado;
+
+            document.getElementById('modal-title').textContent = 'Editar Movimiento';
+            openModal('modal-item');
+        }
+
+        // Manejar envío de formulario
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('item-id').value;
+            const tipo = document.getElementById('item-tipo').value;
+            const nombre = document.getElementById('item-nombre').value.trim();
+            const monto = parseFloat(document.getElementById('item-monto').value);
+            const categoria = document.getElementById('item-categoria').value.trim();
+            const completado = document.getElementById('item-completado').checked;
+
+            if (id) {
+                // Editar existente
+                const item = state.find(i => i.id === id);
+                if (item) {
+                    item.tipo = tipo;
+                    item.nombre = nombre;
+                    item.monto = monto;
+                    item.categoria = categoria;
+                    item.completado = completado;
+                }
+            } else {
+                // Crear nuevo
+                const newItem = {
+                    id: Date.now().toString(),
+                    tipo,
+                    nombre,
+                    monto,
+                    categoria,
+                    completado
+                };
+                state.push(newItem);
+            }
+
+            saveState();
+            closeModal('modal-item');
+        }
+
+        // Gráfico de Pastel Interactivo con Chart.js
+        function initChart() {
+            const ctx = document.getElementById('financialChart').getContext('2d');
+            
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: getChartData(),
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { family: 'Inter', size: 12 },
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${formatCRC(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        function getChartData() {
+            const totalGastos = state.filter(i => i.tipo === 'gasto').reduce((acc, i) => acc + i.monto, 0);
+            const totalIngresos = state.filter(i => i.tipo === 'ingreso').reduce((acc, i) => acc + i.monto, 0);
+            const fondoBoda = Math.max(0, totalIngresos - totalGastos);
+
+            return {
+                labels: ['Fondo para Boda', 'Gastos & Cuentas'],
+                datasets: [{
+                    data: [fondoBoda, totalGastos],
+                    backgroundColor: ['#059669', '#E11D48'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            };
+        }
+
+        function updateChart() {
+            if (chartInstance) {
+                chartInstance.data = getChartData();
+                chartInstance.update();
+            }
+        }
+    </script>
+</body>
+</html>
