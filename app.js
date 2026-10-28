@@ -339,10 +339,12 @@ function girarRuleta() {
     let sectorElegido = Math.floor(Math.random() * numSectores);
     
     let gradosPorSector = 360 / numSectores;
-    // Cálculo exacto para que el triángulo superior apunte perfecto al sector ganador
-    let gradosObjetivo = 360 * 5 + (360 - (sectorElegido * gradosPorSector + gradosPorSector / 2));
+    
+    // CORRECCIÓN MATEMÁTICA: Alineación exacta con el triángulo superior (270 grados en canvas)
+    let anguloCentroSector = sectorElegido * gradosPorSector + gradosPorSector / 2;
+    let gradosObjetivo = 360 * 5 + (270 - anguloCentroSector);
 
-    let anguloInicioAnimacion = anguloActual * (180 / Math.PI);
+    let anguloInicioAnimacion = (anguloActual * 180 / Math.PI) % 360;
     let duracion = 3500;
     let tiempoInicio = null;
 
@@ -353,7 +355,7 @@ function girarRuleta() {
         let easeProgreso = 1 - Math.pow(1 - progreso, 3);
         
         let anguloActualGrados = anguloInicioAnimacion + (gradosObjetivo * easeProgreso);
-        anguloActual = anguloActualGrados * (Math.PI / 180);
+        anguloActual = (anguloActualGrados * Math.PI) / 180;
         
         dibujarRuletaEstetica(anguloActual);
 
