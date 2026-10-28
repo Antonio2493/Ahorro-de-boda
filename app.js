@@ -1,187 +1,251 @@
 // ==========================================
 // CONTROL FINANCIERO DE BODA - ANTONIO Y DORITA
+// Integración en Tiempo Real con Firebase Firestore
 // ==========================================
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Colección de versículos bíblicos (Reina-Valera 1960)
-    const versiculosBiblicos = [
-        { texto: "Las muchas aguas no podrán apagar el amor, ni le ahogarán los ríos.", referencia: "Cantares 8:7" },
-        { texto: "Y sobre todas estas cosas vestíos de amor, que es el vínculo perfecto.", referencia: "Colosenses 3:14" },
-        { texto: "Mejores son dos que uno; porque tienen mejor paga de su trabajo.", referencia: "Eclesiastés 4:9" },
-        { texto: "El cordón de tres dobleces no se rompe pronto.", referencia: "Eclesiastés 4:12" }
-    ];
+// Colección de versículos bíblicos (Reina-Valera 1960)
+const BIBLE_VERSES = [
+    { text: "Las muchas aguas no podrán apagar el amor, ni le ahogarán los ríos.", ref: "— Cantares 8:7 (RVR1960)" },
+    { text: "El amor es sufrido, es benigno; el amor no tiene envidia, el amor no es jactancioso, no se envanece; no hace nada indebido, no busca lo suyo, no se irrita, no guarda rencor.", ref: "— 1 Corintios 13:4-5 (RVR1960)" },
+    { text: "Y sobre todas estas cosas vestíos de amor, que es el vínculo perfecto.", ref: "— Colosenses 3:14 (RVR1960)" },
+    { text: "Mejores son dos que uno; porque tienen mejor paga de su trabajo. Porque si cayeren, el uno levantará a su compañero.", ref: "— Eclesiastés 4:9-10 (RVR1960)" },
+    { text: "Nosotros le amamos a él, porque él nos amó primero.", ref: "— 1 Juan 4:19 (RVR1960)" },
+    { text: "Por tanto, dejará el hombre a su padre y a su madre, y se unirá a su mujer, y serán una sola carne.", ref: "— Génesis 2:24 (RVR1960)" },
+    { text: "El cordón de tres dobleces no se rompe pronto.", ref: "— Eclesiastés 4:12 (RVR1960)" }
+];
 
-    let indiceVersiculoActual = 0;
+let currentVerseIndex = 0;
+let appState = {
+    goal: 4000000,
+    savings: [],
+    expenses: []
+};
 
-    // Estado inicial de la aplicación (respaldado con almacenamiento local)
-    let estadoApp = {
-        metaGlobal: parseFloat(localStorage.getItem('boda_meta')) || 4000000,
-        registroAhorros: JSON.parse(localStorage.getItem('boda_ahorros')) || [
-            { id: 1, persona: 'Antonio', concepto: 'Ahorro base inicial', monto: 434000 }
-        ],
-        registroGastos: JSON.parse(localStorage.getItem('boda_gastos')) || []
-    };
+// Referencias del DOM
+let inputGoal, btnSaveGoal, progressBarFill, labelSaved, labelPercentage, labelGoal;
+let summarySavings, summaryExpenses, summaryBalance;
+let formSavings, savingPerson, savingConcept, savingAmount, savingsList;
+let formExpenses, expenseConcept, expenseAmount, expensesList;
+let verseText, verseRef, btnNextVerse;
 
-    // Referencias a elementos del DOM
-    const inputMeta = document.getElementById('input-goal');
-    const btnGuardarMeta = document.getElementById('btn-save-goal');
-    const barraProgreso = document.getElementById('progress-bar-fill');
-    const etiquetaAhorrado = document.getElementById('label-saved');
-    const etiquetaPorcentaje = document.getElementById('label-percentage');
-    const etiquetaMeta = document.getElementById('label-goal');
+// Formateador de Colones Costarricenses (₡)
+const formatCRC = (amount) => '₡' + Math.round(amount).toLocaleString('es-CR');
 
-    const resumenAhorros = document.getElementById('summary-savings');
-    const resumenGastos = document.getElementById('summary-expenses');
-    const resumenBalance = document.getElementById('summary-balance');
+// Evento que se ejecuta al cargar la ventana
+window.addEventListener('DOMContentLoaded', () => {
+    // Inicializar elementos DOM
+    inputGoal = document.getElementById('input-goal');
+    btnSaveGoal = document.getElementById('btn-save-goal');
+    progressBarFill = document.getElementById('progress-bar-fill');
+    labelSaved = document.getElementById('label-saved');
+    labelPercentage = document.getElementById('label-percentage');
+    labelGoal = document.getElementById('label-goal');
 
-    const formularioAhorro = document.getElementById('form-savings');
-    const selectPersona = document.getElementById('saving-person');
-    const inputConceptoAhorro = document.getElementById('saving-concept');
-    const inputMontoAhorro = document.getElementById('saving-amount');
-    const contenedorAhorros = document.getElementById('savings-list');
+    summarySavings = document.getElementById('summary-savings');
+    summaryExpenses = document.getElementById('summary-expenses');
+    summaryBalance = document.getElementById('summary-balance');
 
-    const formularioGasto = document.getElementById('form-expenses');
-    const inputConceptoGasto = document.getElementById('expense-concept');
-    const inputMontoGasto = document.getElementById('expense-amount');
-    const contenedorGastos = document.getElementById('expenses-list');
+    formSavings = document.getElementById('form-savings');
+    savingPerson = document.getElementById('saving-person');
+    savingConcept = document.getElementById('saving-concept');
+    savingAmount = document.getElementById('saving-amount');
+    savingsList = document.getElementById('savings-list');
 
-    const textoVersiculo = document.getElementById('verse-text');
-    const referenciaVersiculo = document.getElementById('verse-ref');
-    const btnSiguienteVersiculo = document.getElementById('btn-next-verse');
+    formExpenses = document.getElementById('form-expenses');
+    expenseConcept = document.getElementById('expense-concept');
+    expenseAmount = document.getElementById('expense-amount');
+    expensesList = document.getElementById('expenses-list');
 
-    // Función para formatear cifras en Colones Costarricenses (₡)
-    const formatearColones = (monto) => '₡' + Math.round(monto).toLocaleString('es-CR');
+    verseText = document.getElementById('verse-text');
+    verseRef = document.getElementById('verse-ref');
+    btnNextVerse = document.getElementById('btn-next-verse');
 
-    // Sincronizar con el almacenamiento local y actualizar pantalla
-    function guardarYActualizar() {
-        localStorage.setItem('boda_meta', estadoApp.metaGlobal);
-        localStorage.setItem('boda_ahorros', JSON.stringify(estadoApp.registroAhorros));
-        localStorage.setItem('boda_gastos', JSON.stringify(estadoApp.registroGastos));
-        renderizarInterfaz();
+    // Asignación de Eventos
+    if (btnSaveGoal) btnSaveGoal.addEventListener('click', guardarMetaNube);
+    if (formSavings) formSavings.addEventListener('submit', guardarAhorroNube);
+    if (formExpenses) formExpenses.addEventListener('submit', guardarGastoNube);
+    if (btnNextVerse) {
+        btnNextVerse.addEventListener('click', () => {
+            currentVerseIndex = (currentVerseIndex + 1) % BIBLE_VERSES.length;
+            const v = BIBLE_VERSES[currentVerseIndex];
+            verseText.innerText = `"${v.text}"`;
+            verseRef.innerText = v.ref;
+        });
     }
 
-    // Renderizar toda la interfaz de usuario
-    function renderizarInterfaz() {
-        inputMeta.value = estadoApp.metaGlobal;
-
-        const totalAhorros = estadoApp.registroAhorros.reduce((acc, item) => acc + item.monto, 0);
-        const totalGastos = estadoApp.registroGastos.reduce((acc, item) => acc + item.monto, 0);
-        const saldoDisponible = totalAhorros - totalGastos;
-        const porcentajeLogrado = Math.min(Math.round((totalAhorros / estadoApp.metaGlobal) * 100), 100);
-
-        // Actualizar barra de progreso
-        barraProgreso.style.width = porcentajeLogrado + '%';
-        etiquetaAhorrado.textContent = `Ahorrado: ${formatearColones(totalAhorros)}`;
-        etiquetaPorcentaje.textContent = porcentajeLogrado + '%';
-        etiquetaMeta.textContent = `Meta: ${formatearColones(estadoApp.metaGlobal)}`;
-
-        // Actualizar tarjetas de resumen
-        resumenAhorros.textContent = formatearColones(totalAhorros);
-        resumenGastos.textContent = formatearColones(totalGastos);
-        resumenBalance.textContent = formatearColones(saldoDisponible);
-
-        // Renderizar tabla de ahorros
-        contenedorAhorros.innerHTML = '';
-        if (estadoApp.registroAhorros.length === 0) {
-            contenedorAhorros.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#718096;">No hay aportes registrados todavía.</td></tr>';
-        } else {
-            estadoApp.registroAhorros.forEach(item => {
-                const fila = document.createElement('tr');
-                fila.innerHTML = `
-                    <td><strong>${item.persona}</strong></td>
-                    <td>${item.concepto}</td>
-                    <td>${formatearColones(item.monto)}</td>
-                    <td><button class="btn-delete" onclick="removerAhorro(${item.id})">Eliminar</button></td>
-                `;
-                contenedorAhorros.appendChild(fila);
-            });
-        }
-
-        // Renderizar tabla de gastos
-        contenedorGastos.innerHTML = '';
-        if (estadoApp.registroGastos.length === 0) {
-            contenedorGastos.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#718096;">No hay gastos registrados todavía.</td></tr>';
-        } else {
-            estadoApp.registroGastos.forEach(item => {
-                const fila = document.createElement('tr');
-                fila.innerHTML = `
-                    <td>${item.concepto}</td>
-                    <td>${formatearColones(item.monto)}</td>
-                    <td><button class="btn-delete" onclick="removerGasto(${item.id})">Eliminar</button></td>
-                `;
-                contenedorGastos.appendChild(fila);
-            });
-        }
+    // Iniciar Sincronización en Tiempo Real con Firebase si está listo
+    if (window.db) {
+        sincronizarBodaConNube();
+    } else {
+        window.addEventListener('firebase-ready', sincronizarBodaConNube);
     }
-
-    // Evento para actualizar la meta global
-    btnGuardarMeta.addEventListener('click', () => {
-        const nuevaMeta = parseFloat(inputMeta.value);
-        if (nuevaMeta && nuevaMeta > 0) {
-            estadoApp.metaGlobal = nuevaMeta;
-            guardarYActualizar();
-        } else {
-            alert('Por favor, introduce un valor de meta válido.');
-        }
-    });
-
-    // Evento para registrar un nuevo ahorro
-    formularioAhorro.addEventListener('submit', (evento) => {
-        evento.preventDefault();
-        const persona = selectPersona.value;
-        const concepto = inputConceptoAhorro.value.trim();
-        const monto = parseFloat(inputMontoAhorro.value);
-
-        if (concepto && monto > 0) {
-            estadoApp.registroAhorros.push({
-                id: Date.now(),
-                persona,
-                concepto,
-                monto
-            });
-            inputConceptoAhorro.value = '';
-            inputMontoAhorro.value = '';
-            guardarYActualizar();
-        }
-    });
-
-    // Evento para registrar un nuevo gasto de boda
-    formularioGasto.addEventListener('submit', (evento) => {
-        evento.preventDefault();
-        const concepto = inputConceptoGasto.value.trim();
-        const monto = parseFloat(inputMontoGasto.value);
-
-        if (concepto && monto > 0) {
-            estadoApp.registroGastos.push({
-                id: Date.now(),
-                concepto,
-                monto
-            });
-            inputConceptoGasto.value = '';
-            inputMontoGasto.value = '';
-            guardarYActualizar();
-        }
-    });
-
-    // Funciones globales para eliminar registros de las tablas
-    window.removerAhorro = function(id) {
-        estadoApp.registroAhorros = estadoApp.registroAhorros.filter(item => item.id !== id);
-        guardarYActualizar();
-    };
-
-    window.removerGasto = function(id) {
-        estadoApp.registroGastos = estadoApp.registroGastos.filter(item => item.id !== id);
-        guardarYActualizar();
-    };
-
-    // Botón para rotar los versículos bíblicos
-    btnSiguienteVersiculo.addEventListener('click', () => {
-        indiceVersiculoActual = (indiceVersiculoActual + 1) % versiculosBiblicos.length;
-        const versiculo = versiculosBiblicos[indiceVersiculoActual];
-        textoVersiculo.textContent = `"${versiculo.texto}"`;
-        referenciaVersiculo.textContent = `— ${versiculo.referencia} (RVR1960)`;
-    });
-
-    // Inicializar visualización al cargar la página
-    renderizarInterfaz();
 });
+
+// ==========================================
+// SINCRONIZACIÓN EN TIEMPO REAL CON FIRESTORE
+// ==========================================
+
+function sincronizarBodaConNube() {
+    // 1. Escuchar Meta de la Boda
+    const docMetaRef = window.doc(window.db, "boda_finanzas", "meta_general");
+    window.onSnapshot(docMetaRef, (docSnap) => {
+        if (docSnap.exists()) {
+            appState.goal = docSnap.data().monto || 4000000;
+        }
+        renderApp();
+    });
+
+    // 2. Escuchar Lista de Ahorros
+    const qSavings = window.collection(window.db, "boda_ahorros");
+    window.onSnapshot(qSavings, (snapshot) => {
+        appState.savings = [];
+        snapshot.forEach((docSnap) => {
+            appState.savings.push({ idDoc: docSnap.id, ...docSnap.data() });
+        });
+        // Ordenar por fecha de creación si existe
+        appState.savings.sort((a, b) => (b.fecha || 0) - (a.fecha || 0));
+        renderApp();
+    });
+
+    // 3. Escuchar Lista de Gastos
+    const qExpenses = window.collection(window.db, "boda_gastos");
+    window.onSnapshot(qExpenses, (snapshot) => {
+        appState.expenses = [];
+        snapshot.forEach((docSnap) => {
+            appState.expenses.push({ idDoc: docSnap.id, ...docSnap.data() });
+        });
+        appState.expenses.sort((a, b) => (b.fecha || 0) - (a.fecha || 0));
+        renderApp();
+    });
+}
+
+// Renderizar Interfaz
+function renderApp() {
+    if (inputGoal) inputGoal.value = appState.goal;
+
+    const totalSavings = appState.savings.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
+    const totalExpenses = appState.expenses.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
+    const currentBalance = totalSavings - totalExpenses;
+    const percentage = appState.goal > 0 ? Math.min(Math.round((totalSavings / appState.goal) * 100), 100) : 0;
+
+    if (progressBarFill) progressBarFill.style.width = `${percentage}%`;
+    if (labelSaved) labelSaved.innerText = `Ahorrado: ${formatCRC(totalSavings)}`;
+    if (labelPercentage) labelPercentage.innerText = `${percentage}%`;
+    if (labelGoal) labelGoal.innerText = `Meta: ${formatCRC(appState.goal)}`;
+
+    if (summarySavings) summarySavings.innerText = formatCRC(totalSavings);
+    if (summaryExpenses) summaryExpenses.innerText = formatCRC(totalExpenses);
+    if (summaryBalance) summaryBalance.innerText = formatCRC(currentBalance);
+
+    // Tabla de Ahorros
+    if (savingsList) {
+        savingsList.innerHTML = '';
+        if (appState.savings.length === 0) {
+            savingsList.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#888;">No hay ahorros registrados en la nube.</td></tr>';
+        } else {
+            appState.savings.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${item.person}</strong></td>
+                    <td>${item.concept}</td>
+                    <td>${formatCRC(item.amount)}</td>
+                    <td><button class="btn-delete" onclick="eliminarAhorroNube('${item.idDoc}')">Eliminar</button></td>
+                `;
+                savingsList.appendChild(tr);
+            });
+        }
+    }
+
+    // Tabla de Gastos
+    if (expensesList) {
+        expensesList.innerHTML = '';
+        if (appState.expenses.length === 0) {
+            expensesList.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#888;">No hay gastos registrados en la nube.</td></tr>';
+        } else {
+            appState.expenses.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.concept}</td>
+                    <td>${formatCRC(item.amount)}</td>
+                    <td><button class="btn-delete" onclick="eliminarGastoNube('${item.idDoc}')">Eliminar</button></td>
+                `;
+                expensesList.appendChild(tr);
+            });
+        }
+    }
+}
+
+// Acciones con Firestore
+async function guardarMetaNube() {
+    const newGoal = parseFloat(inputGoal.value);
+    if (newGoal && newGoal > 0) {
+        try {
+            const docMetaRef = window.doc(window.db, "boda_finanzas", "meta_general");
+            await window.setDoc(docMetaRef, { monto: newGoal }, { merge: true });
+        } catch (e) {
+            console.error("Error al guardar meta:", e);
+        }
+    }
+}
+
+async function guardarAhorroNube(e) {
+    e.preventDefault();
+    const person = savingPerson.value;
+    const concept = savingConcept.value.trim();
+    const amount = parseFloat(savingAmount.value);
+
+    if (concept && amount > 0) {
+        try {
+            await window.addDoc(window.collection(window.db, "boda_ahorros"), {
+                person,
+                concept,
+                amount,
+                fecha: Date.now()
+            });
+            savingConcept.value = '';
+            savingAmount.value = '';
+        } catch (e) {
+            console.error("Error al guardar ahorro:", e);
+        }
+    }
+}
+
+async function guardarGastoNube(e) {
+    e.preventDefault();
+    const concept = expenseConcept.value.trim();
+    const amount = parseFloat(expenseAmount.value);
+
+    if (concept && amount > 0) {
+        try {
+            await window.addDoc(window.collection(window.db, "boda_gastos"), {
+                concept,
+                amount,
+                fecha: Date.now()
+            });
+            expenseConcept.value = '';
+            expenseAmount.value = '';
+        } catch (e) {
+            console.error("Error al guardar gasto:", e);
+        }
+    }
+}
+
+window.eliminarAhorroNube = async function(idDoc) {
+    if (confirm("¿Deseas eliminar este registro de ahorro de la nube?")) {
+        try {
+            await window.deleteDoc(window.doc(window.db, "boda_ahorros", idDoc));
+        } catch (e) {
+            console.error("Error al eliminar ahorro:", e);
+        }
+    }
+};
+
+window.eliminarGastoNube = async function(idDoc) {
+    if (confirm("¿Deseas eliminar este registro de gasto de la nube?")) {
+        try {
+            await window.deleteDoc(window.doc(window.db, "boda_gastos", idDoc));
+        } catch (e) {
+            console.error("Error al eliminar gasto:", e);
+        }
+    }
+};
