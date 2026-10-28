@@ -231,6 +231,10 @@ window.eliminarGastoNube = async function(idDoc) {
     }
 };
 
+// ==========================================
+// RULETA DE PREMIOS PARA DORITA (Sincronizada)
+// ==========================================
+
 const premiosRuleta = [
     { texto: "🍫", nombre: "¡Un Chocolate!" },
     { texto: "❤️", nombre: "Te amo" },
@@ -284,18 +288,13 @@ function dibujarRuletaEstetica(anguloRotacion) {
         let anguloMedio = anguloInicio + arco / 2;
         ctx.rotate(anguloMedio);
 
-        // Fuente grande para que el emoji resalte hermoso
         ctx.font = "32px Arial";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-
-        // Sombra suave para darle relieve
         ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
         ctx.shadowBlur = 4;
 
-        // Dibujar el emoji a mitad de radio
         ctx.fillText(premio.texto, radio / 1.7, 0);
-
         ctx.restore();
     });
 }
@@ -338,10 +337,12 @@ function girarRuleta() {
 
     let numSectores = premiosRuleta.length;
     let sectorElegido = Math.floor(Math.random() * numSectores);
+    
     let gradosPorSector = 360 / numSectores;
-    let gradosObjetivo = 360 * 5 + (numSectores - sectorElegido) * gradosPorSector - gradosPorSector / 2;
+    // Cálculo exacto para que el triángulo superior apunte perfecto al sector ganador
+    let gradosObjetivo = 360 * 5 + (360 - (sectorElegido * gradosPorSector + gradosPorSector / 2));
 
-    let anguloInicioAnimacion = anguloActual;
+    let anguloInicioAnimacion = anguloActual * (180 / Math.PI);
     let duracion = 3500;
     let tiempoInicio = null;
 
@@ -351,13 +352,14 @@ function girarRuleta() {
         let progreso = Math.min(tiempoPasado / duracion, 1);
         let easeProgreso = 1 - Math.pow(1 - progreso, 3);
         
-        let anguloActualAnim = anguloInicioAnimacion + (gradosObjetivo * (Math.PI / 180)) * easeProgreso;
-        dibujarRuletaEstetica(anguloActualAnim);
+        let anguloActualGrados = anguloInicioAnimacion + (gradosObjetivo * easeProgreso);
+        anguloActual = anguloActualGrados * (Math.PI / 180);
+        
+        dibujarRuletaEstetica(anguloActual);
 
         if (progreso < 1) {
             requestAnimationFrame(animar);
         } else {
-            anguloActual = anguloActualAnim % (2 * Math.PI);
             girando = false;
             let premioGanado = premiosRuleta[sectorElegido];
             mostrarNotificacionPremio(premioGanado);
