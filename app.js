@@ -249,3 +249,145 @@ window.eliminarGastoNube = async function(idDoc) {
         }
     }
 };
+// ==========================================
+// RULETA DE PREMIOS PARA DORITA
+// ==========================================
+
+const premiosRuleta = [
+    { texto: "¡Un Chocolate! 🍫", tipo: "premio" },
+    { texto: "Te amo ❤️", tipo: "amor" },
+    { texto: "¡Una Hamburguesa! 🍔", tipo: "premio" },
+    { texto: "Sigue participando 🍀", tipo: "neutro" },
+    { texto: "Te amo infinito 💖", tipo: "amor" },
+    { texto: "Sigue participando 🍀", tipo: "neutro" }
+];
+
+let anguloActual = 0;
+let girando = false;
+
+window.addEventListener('DOMContentLoaded', () => {
+    dibujarRuletaEstetica(0);
+    verificarBloqueoDiario();
+});
+
+function dibujarRuletaEstetica(anguloRotacion) {
+    const canvas = document.getElementById('ruleta-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const totalSectores = premiosRuleta.length;
+    const arco = (2 * Math.PI) / totalSectores;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const centro = canvas.width / 2;
+    const radio = centro - 10;
+
+    premiosRuleta.forEach((premio, i) => {
+        let anguloInicio = anguloRotacion + i * arco;
+        let anguloFin = anguloInicio + arco;
+
+        ctx.beginPath();
+        ctx.moveTo(centro, centro);
+        ctx.arc(centro, centro, radio, anguloInicio, anguloFin);
+        ctx.closePath();
+
+        // Colores alternados para los sectores
+        ctx.fillStyle = i % 2 === 0 ? '#f43f5e' : '#fb7185';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Texto dentro de la ruleta
+        ctx.save();
+        ctx.translate(centro, centro);
+        ctx.rotate(anguloInicio + arco / 2);
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 11px Poppins, sans-serif";
+        ctx.fillText(premio.texto.substring(0, 14), radio - 15, 5);
+        ctx.restore();
+    });
+}
+
+function verificarBloqueoDiario() {
+    const ultimoGiro = localStorage.getItem('boda_ultimo_giro');
+    const btnGirar = document.getElementById('btn-girar');
+    const msg = document.getElementById('mensaje-ruleta');
+
+    if (ultimoGiro) {
+        const ahora = Date.now();
+        const tiempoTranscurrido = ahora - parseInt(ultimoGiro);
+        const ₡24Horas = 24 * 60 * 60 * 1000;
+
+        if (tiempoTranscurrido < ₡24Horas) {
+            const horasRestantes = Math.ceil((₡24Horas - tiempoTranscurrido) / (1000 * 60 * 60));
+            if (btnGirar) btnGirar.disabled = true;
+            if (msg) msg.innerText = `⏳ Ya giraste hoy. Vuelve en ${horasRestantes} horas para tu próximo intento.`;
+        }
+    }
+}
+
+function girarRuleta() {
+    if (girando) return;
+    
+    // Verificación de seguridad de 24 horas
+    const ultimoGiro = localStorage.getItem('boda_ultimo_giro');
+    if (ultimoGiro) {
+        const tiempoTranscurrido = Date.now() - parseInt(ultimoGiro);
+        if (tiempoTranscurrido < 24 * 60 * 60 * 1000) {
+            alert("¡Ya has realizado tu giro de las últimas 24 horas! Vuelve mañana.");
+            return;
+        }
+    }
+
+    girando = true;
+    const btnGirar = document.getElementById('btn-girar');
+    if (btnGirar) btnGirar.disabled = true;
+
+    // Guardar el tiempo actual del giro
+    localStorage.setItem('boda_ultimo_giro', Date.now().toString());
+
+    let numSectores = premiosRuleta.length;
+    let sectorElegido = Math.floor(Math.random() * numSectores);
+    
+    // Calcular los grados de giro aleatorios (mínimo 5 vueltas completas + sector elegido)
+    let gradosPorSector = 360 / numSectores;
+    let gradosObjetivo = 360 * 5 + (numSectores - sectorElegido) * gradosPorSector - gradosPorSector / 2;
+
+    let anguloInicioAnimacion = anguloActual;
+    let duracion = 3500; // 3.5 segundos de animación
+    let tiempoInicio = null;
+
+    function animar(tiempoActual) {
+        if (!tiempoInicio) tiempoInicio = tiempoActual;
+        let tiempoPasado = tiempoActual - tiempoInicio;
+        let progreso = Math.min(tiempoPasado / duracion, 1);
+        
+        // Efecto de aceleración y desaceleración suave (easeOutCubic)
+        let easeProgreso = 1 - Math.pow(1 - progreso, 3);
+        
+        let anguloActualAnim = anguloInicioAnimacion + (gradosObjetivo * (Math.PI / 180)) * easeProgreso;
+        dibujarRuletaEstetica(anguloActualAnim);
+
+        if (progreso < 1) {
+            requestAnimationFrame(animar);
+        } else {
+            anguloActual = anguloActualAnim % (2 * Math.PI);
+            girando = false;
+            let premioGanado = premiosRuleta[sectorElegido];
+            mostrarNotificacionPremio(premioGanado);
+        }
+    }
+
+    requestAnimationFrame(animar);
+}
+
+function mostrarNotificacionPremio(premio) {
+    const msg = document.getElementById('mensaje-ruleta');
+    if (msg) {
+        msg.innerHTML = `🎉 ¡Felicidades! Te ha salido: <strong style="color: #e11d48; font-size: 1.1rem;">${premio.texto}</strong>`;
+    }
+    
+    // Alerta especial de confirmación para que quede constancia del premio real
+    alert(`🎉 ¡Increíble! Dorita se ha ganado:\n\n✨ ${premio.texto} ✨\n\n(Este resultado ha quedado registrado para hacerlo efectivo ❤️).`);
+};
