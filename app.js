@@ -279,7 +279,10 @@ function dibujarRuletaEstetica(anguloRotacion) {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const centro = canvas.width / 2;
-    const radio = centro - 10;
+    const radio = centro - 5;
+
+    // Colores vibrantes de alta visibilidad para que resalten
+    const coloresSectores = ['#e11d48', '#9333ea', '#2563eb', '#0d9488', '#d97706', '#db2777'];
 
     premiosRuleta.forEach((premio, i) => {
         let anguloInicio = anguloRotacion + i * arco;
@@ -290,21 +293,24 @@ function dibujarRuletaEstetica(anguloRotacion) {
         ctx.arc(centro, centro, radio, anguloInicio, anguloFin);
         ctx.closePath();
 
-        // Colores alternados para los sectores
-        ctx.fillStyle = i % 2 === 0 ? '#f43f5e' : '#fb7185';
+        // Rellenar con colores alegres
+        ctx.fillStyle = coloresSectores[i % coloresSectores.length];
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3;
         ctx.stroke();
 
-        // Texto dentro de la ruleta
+        // Dibujar el texto dentro de cada porción
         ctx.save();
         ctx.translate(centro, centro);
         ctx.rotate(anguloInicio + arco / 2);
         ctx.textAlign = "right";
         ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 11px Poppins, sans-serif";
-        ctx.fillText(premio.texto.substring(0, 14), radio - 15, 5);
+        ctx.font = "bold 12px Poppins, sans-serif";
+        // Añadir una ligera sombra al texto para que no se pierda
+        ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+        ctx.shadowBlur = 4;
+        ctx.fillText(premio.texto, radio - 20, 5);
         ctx.restore();
     });
 }
