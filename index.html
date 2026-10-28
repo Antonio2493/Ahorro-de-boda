@@ -9,6 +9,37 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Carga e Inicialización de Firebase Firestore (Sincronización con tu Base de Datos) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { 
+            getFirestore, collection, addDoc, setDoc, deleteDoc, doc, onSnapshot 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Credenciales de tu proyecto de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAyzQ3pvXWmiTNHpI8BanWfECIZBlgQRYs",
+            authDomain: "base-de-datos-de-canciones.firebaseapp.com",
+            projectId: "base-de-datos-de-canciones",
+            storageBucket: "base-de-datos-de-canciones.firebasestorage.app",
+            messagingSenderId: "389166639712",
+            appId: "1:389166639712:web:6add84770f5892a80af105",
+            measurementId: "G-HHHMW6VZ8Z"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+        window.collection = collection;
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.addDoc = addDoc;
+        window.deleteDoc = deleteDoc;
+        window.onSnapshot = onSnapshot;
+
+        // Notificar que Firebase ya está inicializado y listo para app.js
+        window.dispatchEvent(new Event('firebase-ready'));
+    </script>
 </head>
 <body>
 
