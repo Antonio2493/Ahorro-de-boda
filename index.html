@@ -176,15 +176,17 @@
             <!-- Sección de la Ruleta de Premios para Dorita -->
 <section class="card ruleta-section" style="text-align: center; margin-top: 20px;">
     <h2>🎡 La Ruleta del amor de Dorita 🎁</h2>
-    <p style="color: #666; font-size: 0.95rem;">¡Gira una vez al día para ganar un detalle especial!</p>
+    <p style="color: #cbd5e1; font-size: 0.95rem; margin-bottom: 15px;">¡Gira una vez al día para ganar un detalle especial!</p>
     
-    <div style="position: relative; width: 250px; height: 250px; margin: 20px auto;">
-        <canvas id="ruleta-canvas" width="250" height="250" style="border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.15);"></canvas>
-        <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 20px solid #e11d48;"></div>
+    <div style="position: relative; width: 260px; height: 260px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;">
+        <!-- Indicador de la ruleta bien posicionado arriba -->
+        <div style="position: absolute; top: -5px; z-index: 10; width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 20px solid #f43f5e; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));"></div>
+        
+        <canvas id="ruleta-canvas" width="260" height="260" style="border-radius: 50%; box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3); border: 4px solid #f43f5e; background: #ffffff;"></canvas>
     </div>
 
-    <button id="btn-girar" class="btn btn-primary" onclick="girarRuleta()" style="padding: 10px 20px; font-size: 1.1rem;">🎲 ¡Girar Ruleta!</button>
-    <p id="mensaje-ruleta" style="margin-top: 15px; font-weight: bold; color: #0284c7;"></p>
+    <button id="btn-girar" class="btn btn-primary" onclick="girarRuleta()" style="padding: 12px 25px; font-size: 1.1rem; margin-top: 20px; cursor: pointer;">🎲 ¡Girar Ruleta!</button>
+    <p id="mensaje-ruleta" style="margin-top: 15px; font-weight: bold; color: #38bdf8; min-height: 30px;"></p>
 </section>
 
         </div>
