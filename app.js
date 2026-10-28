@@ -257,7 +257,7 @@ function dibujarRuletaEstetica(anguloRotacion) {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const centro = canvas.width / 2;
-    const radio = centro - 5;
+    const radio = centro - 10;
 
     const coloresSectores = ['#e11d48', '#9333ea', '#2563eb', '#0d9488', '#d97706', '#db2777'];
 
@@ -265,6 +265,7 @@ function dibujarRuletaEstetica(anguloRotacion) {
         let anguloInicio = anguloRotacion + i * arco;
         let anguloFin = anguloInicio + arco;
 
+        // Dibujar sector de la ruleta
         ctx.beginPath();
         ctx.moveTo(centro, centro);
         ctx.arc(centro, centro, radio, anguloInicio, anguloFin);
@@ -276,15 +277,24 @@ function dibujarRuletaEstetica(anguloRotacion) {
         ctx.lineWidth = 3;
         ctx.stroke();
 
+        // Dibujar el texto centrado y más legible en cada porción
         ctx.save();
         ctx.translate(centro, centro);
         ctx.rotate(anguloInicio + arco / 2);
+        
+        // Alinear hacia el borde exterior para que no se amontonen en el centro
         ctx.textAlign = "right";
         ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 12px Poppins, sans-serif";
-        ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
-        ctx.shadowBlur = 4;
-        ctx.fillText(premio.texto, radio - 20, 5);
+        ctx.font = "bold 13px Poppins, sans-serif";
+        
+        // Sombra fuerte para que resalte sobre cualquier color de fondo
+        ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+        ctx.shadowBlur = 6;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+
+        // Escribir el texto desplazado hacia afuera (cerca del borde)
+        ctx.fillText(premio.texto, radio - 15, 5);
         ctx.restore();
     });
 }
